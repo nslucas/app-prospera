@@ -385,9 +385,9 @@ Budget shape:
 ```json
 {
   "id": 7,
-  "categoryId": 3,
-  "month": 6,
-  "year": 2026,
+  "categoryId": null,
+  "month": null,
+  "year": null,
   "amount": 800,
   "active": true
 }
@@ -395,6 +395,7 @@ Budget shape:
 
 Endpoints:
 
+- `GET /budgets`
 - `GET /budgets?month=&year=`
 - `POST /budgets`
 - `GET /budgets/{budgetId}`
@@ -421,10 +422,16 @@ Progress response item:
 
 Particularities:
 
-- Budgets are allowed only for active `EXPENSE` categories.
-- One active budget per user/category/month/year.
+- `categoryId` is optional. When null, the budget is a global monthly budget.
+- `month` and `year` are optional together. When both are null, the budget recurs every month.
+- When `month/year` are provided to `GET /budgets`, the response includes budgets for that exact month plus recurring budgets.
+- A specific month budget overrides a recurring budget for the same scope (`categoryId`, or global when `categoryId` is null).
+- Category budgets are allowed only for active `EXPENSE` categories.
+- One active budget per user/scope/period.
 - `amount` must be greater than zero.
 - Budget usage includes account `EXPENSE` transactions plus card statement installments for the budget month.
+- Global budget usage sums all monthly spending, including uncategorized spending.
+- In progress responses, global budgets return `categoryId: null` and `categoryName: "Monthly budget"`.
 - Card payments are excluded from budget spending to avoid double-counting.
 - `NEAR_LIMIT` starts at 80%.
 

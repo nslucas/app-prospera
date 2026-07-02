@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,9 +37,12 @@ public class BudgetService {
     }
 
     public List<Budget> findAuthenticatedUserBudgets(Integer month, Integer year) {
-        validateMonthYear(month, year);
         User user = authenticatedUserService.getAuthenticatedUser();
-        return budgetRepository.findByUserIdAndActiveTrueAndMonthAndYearOrderByCategoryIdAsc(user.getId(), month, year);
+        validateOptionalMonthYear(month, year);
+        if (month == null) {
+            return budgetRepository.findByUserIdAndActiveTrueOrderByYearDescMonthDescCategoryIdAscIdAsc(user.getId());
+        }
+        return findApplicableBudgets(user.getId(), month, year);
     }
 
     public Budget findAuthenticatedUserBudget(Integer id) {
@@ -50,7 +56,9 @@ public class BudgetService {
         }
         User user = authenticatedUserService.getAuthenticatedUser();
         validate(record);
-        categoryService.requireActiveCategory(user.getId(), record.categoryId(), CategoryType.EXPENSE);
+        if (record.categoryId() != null) {
+            categoryService.requireActiveCategory(user.getId(), record.categoryId(), CategoryType.EXPENSE);
+        }
         validateUniqueBudget(user.getId(), null, record.categoryId(), record.month(), record.year());
 
         Budget budget = new Budget(null, record.categoryId(), record.month(), record.year(),
@@ -64,7 +72,9 @@ public class BudgetService {
         }
         User user = authenticatedUserService.getAuthenticatedUser();
         validate(record);
-        categoryService.requireActiveCategory(user.getId(), record.categoryId(), CategoryType.EXPENSE);
+        if (record.categoryId() != null) {
+            categoryService.requireActiveCategory(user.getId(), record.categoryId(), CategoryType.EXPENSE);
+        }
         validateUniqueBudget(user.getId(), id, record.categoryId(), record.month(), record.year());
 
         Budget budget = findUserBudget(user.getId(), id);
@@ -89,28 +99,39 @@ public class BudgetService {
 
     public List<BudgetProgressRecord> getProgress(Integer userId, Integer month, Integer year) {
         Map<Integer, BigDecimal> spending = spendingInsightService.getSpendingByCategory(userId, month, year);
-        List<Budget> budgets = budgetRepository.findByUserIdAndActiveTrueAndMonthAndYearOrderByCategoryIdAsc(userId,
-                month, year);
-        Map<Integer, Category> categoriesById = categoryService.findUserCategories(userId, budgets.stream()
-                        .map(Budget::getCategoryId)
-                        .toList())
-                .stream()
-                .collect(Collectors.toMap(Category::getId, Function.identity()));
+        BigDecimal totalSpending = spending.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        List<Budget> budgets = findApplicableBudgets(userId, month, year);
+        List<Integer> categoryIds = budgets.stream()
+                .map(Budget::getCategoryId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        Map<Integer, Category> categoriesById = categoryIds.isEmpty()
+                ? Map.of()
+                : categoryService.findUserCategories(userId, categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getId, Function.identity()));
         return budgets.stream()
-                .map(budget -> toProgress(budget, categoriesById.get(budget.getCategoryId()),
-                        spending.getOrDefault(budget.getCategoryId(), BigDecimal.ZERO)))
+                .map(budget -> toProgress(budget,
+                        budget.getCategoryId() == null ? null : categoriesById.get(budget.getCategoryId()),
+                        budget.getCategoryId() == null
+                                ? totalSpending
+                                : spending.getOrDefault(budget.getCategoryId(), BigDecimal.ZERO),
+                        month, year))
                 .toList();
     }
 
-    private BudgetProgressRecord toProgress(Budget budget, Category category, BigDecimal spentAmount) {
-        if (category == null) {
+    private BudgetProgressRecord toProgress(Budget budget, Category category, BigDecimal spentAmount,
+                                            Integer month, Integer year) {
+        if (budget.getCategoryId() != null && category == null) {
             throw new ObjectNotFoundException("Category not found with id: " + budget.getCategoryId());
         }
         BigDecimal remainingAmount = budget.getAmount().subtract(spentAmount);
         BigDecimal percentUsed = spentAmount.multiply(BigDecimal.valueOf(100))
                 .divide(budget.getAmount(), 2, RoundingMode.HALF_UP);
-        return new BudgetProgressRecord(budget.getId(), budget.getCategoryId(), category.getName(),
-                budget.getMonth(), budget.getYear(), budget.getAmount(), spentAmount, remainingAmount,
+        String categoryName = budget.getCategoryId() == null ? "Monthly budget" : category.getName();
+        return new BudgetProgressRecord(budget.getId(), budget.getCategoryId(), categoryName,
+                month, year, budget.getAmount(), spentAmount, remainingAmount,
                 percentUsed, resolveStatus(percentUsed));
     }
 
@@ -130,21 +151,50 @@ public class BudgetService {
     }
 
     private void validate(BudgetRecord record) {
-        if (record.categoryId() == null) {
-            throw new IllegalArgumentException("Budget category is required");
-        }
-        validateMonthYear(record.month(), record.year());
+        validateOptionalMonthYear(record.month(), record.year());
         if (record.amount() == null || record.amount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Budget amount must be greater than zero");
         }
     }
 
     private void validateUniqueBudget(Integer userId, Integer currentId, Integer categoryId, Integer month, Integer year) {
-        budgetRepository.findByUserIdAndCategoryIdAndMonthAndYearAndActiveTrue(userId, categoryId, month, year)
+        budgetRepository.findActiveByScopeAndPeriod(userId, categoryId, month, year)
+                .stream()
                 .filter(existing -> !existing.getId().equals(currentId))
+                .findAny()
                 .ifPresent(existing -> {
-                    throw new IllegalArgumentException("Active budget already exists for this category and month");
+                    throw new IllegalArgumentException("Active budget already exists for this scope and period");
                 });
+    }
+
+    private List<Budget> findApplicableBudgets(Integer userId, Integer month, Integer year) {
+        List<Budget> budgets = budgetRepository.findApplicableActiveBudgets(userId, month, year);
+        Set<Integer> specificScopes = budgets.stream()
+                .filter(this::isSpecificBudget)
+                .map(Budget::getCategoryId)
+                .collect(Collectors.toSet());
+        return budgets.stream()
+                .filter(budget -> isSpecificBudget(budget) || !specificScopes.contains(budget.getCategoryId()))
+                .sorted(Comparator
+                        .comparing((Budget budget) -> budget.getCategoryId() == null ? 0 : 1)
+                        .thenComparing(budget -> budget.getCategoryId() == null ? 0 : budget.getCategoryId())
+                        .thenComparing(budget -> isSpecificBudget(budget) ? 0 : 1)
+                        .thenComparing(budget -> budget.getId() == null ? 0 : budget.getId()))
+                .toList();
+    }
+
+    private boolean isSpecificBudget(Budget budget) {
+        return budget.getMonth() != null && budget.getYear() != null;
+    }
+
+    private void validateOptionalMonthYear(Integer month, Integer year) {
+        if (month == null && year == null) {
+            return;
+        }
+        if (month == null || year == null) {
+            throw new IllegalArgumentException("Budget month and year must be provided together");
+        }
+        validateMonthYear(month, year);
     }
 
     private void validateMonthYear(Integer month, Integer year) {

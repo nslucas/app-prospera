@@ -21,7 +21,8 @@ public class BudgetResource {
     }
 
     @GetMapping
-    public ResponseEntity<List<BudgetRecord>> findAll(@RequestParam Integer month, @RequestParam Integer year) {
+    public ResponseEntity<List<BudgetRecord>> findAll(@RequestParam(required = false) Integer month,
+                                                      @RequestParam(required = false) Integer year) {
         List<BudgetRecord> budgets = service.findAuthenticatedUserBudgets(month, year).stream()
                 .map(BudgetRecord::new)
                 .toList();

@@ -135,6 +135,7 @@ public class RecurringTransactionService {
         RecurringTransaction recurrence = findUserRecurrence(user.getId(), recurrenceId);
         validateMaterializable(recurrence, occurrenceDate);
         normalizeAndValidate(user.getId(), recurrence);
+        BigDecimal occurrenceAmount = resolveOccurrenceAmount(recurrence, request);
 
         RecurringOccurrence occurrence = occurrenceRepository
                 .findByRecurrenceIdAndOccurrenceDate(recurrence.getId(), occurrenceDate)
@@ -152,17 +153,18 @@ public class RecurringTransactionService {
 
         if (recurrence.getTargetType() == RecurringTargetType.ACCOUNT_TRANSACTION) {
             Transaction transaction = transactionService.createRecurringTransaction(user.getId(),
-                    recurrence.getAccountId(), recurrence.getTransactionType(), recurrence.getAmount(),
+                    recurrence.getAccountId(), recurrence.getTransactionType(), occurrenceAmount,
                     LocalDateTime.of(occurrenceDate, LocalTime.NOON), recurrence.getDescription(),
                     recurrence.getCategoryId());
             occurrence.setTransactionId(transaction.getId());
         } else {
             Expense expense = expenseService.createRecurringExpense(user.getId(), recurrence.getName(),
-                    recurrence.getAmount(), recurrence.getInstallmentCount(),
+                    occurrenceAmount, recurrence.getInstallmentCount(),
                     LocalDateTime.of(occurrenceDate, LocalTime.NOON), recurrence.getDescription(),
                     recurrence.getCardId(), recurrence.getCategoryId());
             occurrence.setExpenseId(expense.getId());
         }
+        occurrence.setAmount(occurrenceAmount);
         occurrence.setStatus(RecurringOccurrenceStatus.MATERIALIZED);
         return occurrenceRepository.save(occurrence);
     }
@@ -206,6 +208,7 @@ public class RecurringTransactionService {
 
         occurrence.setTransactionId(null);
         occurrence.setExpenseId(null);
+        occurrence.setAmount(null);
         occurrence.setStatus(RecurringOccurrenceStatus.PENDING);
         return occurrenceRepository.save(occurrence);
     }
@@ -372,6 +375,20 @@ public class RecurringTransactionService {
             throw new IllegalArgumentException("Occurrence date is required");
         }
         return request.occurrenceDate();
+    }
+
+    private BigDecimal resolveOccurrenceAmount(RecurringTransaction recurrence, RecurringOccurrenceRequest request) {
+        BigDecimal requestedAmount = request.amount();
+        if (requestedAmount == null) {
+            return recurrence.getAmount();
+        }
+        if (recurrence.getClassification() != RecurringClassification.VARIABLE) {
+            throw new IllegalArgumentException("Occurrence amount can only be changed for variable recurrences");
+        }
+        if (requestedAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Occurrence amount must be greater than zero");
+        }
+        return requestedAmount;
     }
 
     private void validateRange(LocalDate from, LocalDate to) {

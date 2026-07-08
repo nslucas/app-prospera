@@ -472,7 +472,16 @@ Endpoints:
 - `POST /recurrences/{recurrenceId}/occurrences`
 - `POST /recurrences/{recurrenceId}/occurrences/skip`
 
-Occurrence materialize/skip request:
+Occurrence materialize request:
+
+```json
+{
+  "occurrenceDate": "2026-07-05",
+  "amount": 350
+}
+```
+
+Occurrence skip request:
 
 ```json
 {
@@ -509,6 +518,8 @@ Particularities:
 - Card recurrences create expenses and installments; `installmentCount` defaults to `1`.
 - Monthly recurrences use `dayOfMonth`; annual recurrences use `monthOfYear` plus `dayOfMonth`.
 - Invalid month days are clamped to the last valid day.
+- Materialization can send `amount` only when `classification` is `VARIABLE`; fixed recurrences reject custom occurrence amounts.
+- Occurrence responses show the materialized occurrence amount when present; otherwise they fall back to the recurrence amount.
 - Duplicate materialization for the same recurrence/date is rejected.
 - Skipped occurrences cannot be materialized later in the current API.
 - `DELETE` soft-deactivates the recurrence.

@@ -15,11 +15,15 @@ public record RecurringOccurrenceRecord(Integer id, Integer recurrenceId, String
     public RecurringOccurrenceRecord(RecurringTransaction recurrence, RecurringOccurrence occurrence,
                                      LocalDate occurrenceDate) {
         this(occurrence == null ? null : occurrence.getId(), recurrence.getId(), recurrence.getName(),
-                occurrenceDate, recurrence.getAmount(), recurrence.getTargetType(), recurrence.getTransactionType(),
+                occurrenceDate, amountFor(recurrence, occurrence), recurrence.getTargetType(), recurrence.getTransactionType(),
                 recurrence.getAccountId(), recurrence.getCardId(), recurrence.getCategoryId(),
                 recurrence.getClassification(),
                 occurrence == null ? RecurringOccurrenceStatus.PENDING : occurrence.getStatus(),
                 occurrence == null ? null : occurrence.getTransactionId(),
                 occurrence == null ? null : occurrence.getExpenseId());
+    }
+
+    private static BigDecimal amountFor(RecurringTransaction recurrence, RecurringOccurrence occurrence) {
+        return occurrence != null && occurrence.getAmount() != null ? occurrence.getAmount() : recurrence.getAmount();
     }
 }

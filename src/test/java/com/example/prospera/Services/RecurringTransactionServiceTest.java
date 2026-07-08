@@ -79,6 +79,79 @@ class RecurringTransactionServiceTest {
         verify(occurrenceRepository).save(captor.capture());
         assertEquals(RecurringOccurrenceStatus.MATERIALIZED, captor.getValue().getStatus());
         assertEquals(20, captor.getValue().getTransactionId());
+        assertEquals(BigDecimal.valueOf(500), captor.getValue().getAmount());
+    }
+
+    @Test
+    void materializeVariableAccountRecurrenceUsesCustomAmount() {
+        User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
+        RecurringTransaction recurrence = accountRecurrence();
+        recurrence.setClassification(RecurringClassification.VARIABLE);
+        Transaction transaction = new Transaction(20, TransactionType.INCOME, BigDecimal.valueOf(650),
+                null, "Salary", 10, null, 1, 7);
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(recurrenceRepository.findByIdAndUserId(99, 1)).thenReturn(Optional.of(recurrence));
+        when(accountService.findUserAccount(1, 10)).thenReturn(new Account(10, "Checking", AccountType.CHECKING,
+                BigDecimal.ZERO, "BRL", true, 1));
+        when(occurrenceRepository.findByRecurrenceIdAndOccurrenceDate(99, LocalDate.of(2026, 6, 5)))
+                .thenReturn(Optional.empty());
+        when(transactionService.createRecurringTransaction(1, 10, TransactionType.INCOME, BigDecimal.valueOf(650),
+                java.time.LocalDateTime.of(2026, 6, 5, 12, 0), "Salary", 7)).thenReturn(transaction);
+        when(occurrenceRepository.save(any(RecurringOccurrence.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        RecurringTransactionService service = service();
+        service.materialize(99, new RecurringOccurrenceRequest(LocalDate.of(2026, 6, 5), BigDecimal.valueOf(650)));
+
+        ArgumentCaptor<RecurringOccurrence> captor = ArgumentCaptor.forClass(RecurringOccurrence.class);
+        verify(occurrenceRepository).save(captor.capture());
+        assertEquals(RecurringOccurrenceStatus.MATERIALIZED, captor.getValue().getStatus());
+        assertEquals(20, captor.getValue().getTransactionId());
+        assertEquals(BigDecimal.valueOf(650), captor.getValue().getAmount());
+    }
+
+    @Test
+    void materializeVariableCardRecurrenceUsesCustomAmount() {
+        User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
+        RecurringTransaction recurrence = cardRecurrence();
+        recurrence.setClassification(RecurringClassification.VARIABLE);
+        Expense expense = new Expense(30, "Gym", BigDecimal.valueOf(145), 1,
+                null, "Monthly gym", 1, 10, 7);
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(recurrenceRepository.findByIdAndUserId(99, 1)).thenReturn(Optional.of(recurrence));
+        when(cardService.findUserCard(1, 10)).thenReturn(new Card(10, "Bank", "Credit", "Visa",
+                "1234", BigDecimal.valueOf(1000), 20, 5, true, 1));
+        when(occurrenceRepository.findByRecurrenceIdAndOccurrenceDate(99, LocalDate.of(2026, 6, 5)))
+                .thenReturn(Optional.empty());
+        when(expenseService.createRecurringExpense(1, "Gym", BigDecimal.valueOf(145), 1,
+                java.time.LocalDateTime.of(2026, 6, 5, 12, 0), "Monthly gym", 10, 7)).thenReturn(expense);
+        when(occurrenceRepository.save(any(RecurringOccurrence.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        RecurringTransactionService service = service();
+        service.materialize(99, new RecurringOccurrenceRequest(LocalDate.of(2026, 6, 5), BigDecimal.valueOf(145)));
+
+        ArgumentCaptor<RecurringOccurrence> captor = ArgumentCaptor.forClass(RecurringOccurrence.class);
+        verify(occurrenceRepository).save(captor.capture());
+        assertEquals(RecurringOccurrenceStatus.MATERIALIZED, captor.getValue().getStatus());
+        assertEquals(30, captor.getValue().getExpenseId());
+        assertEquals(BigDecimal.valueOf(145), captor.getValue().getAmount());
+    }
+
+    @Test
+    void materializeFixedRecurrenceRejectsCustomAmount() {
+        User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
+        RecurringTransaction recurrence = accountRecurrence();
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(recurrenceRepository.findByIdAndUserId(99, 1)).thenReturn(Optional.of(recurrence));
+        when(accountService.findUserAccount(1, 10)).thenReturn(new Account(10, "Checking", AccountType.CHECKING,
+                BigDecimal.ZERO, "BRL", true, 1));
+
+        RecurringTransactionService service = service();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.materialize(99,
+                        new RecurringOccurrenceRequest(LocalDate.of(2026, 6, 5), BigDecimal.valueOf(650))));
+        verifyNoInteractions(transactionService, expenseService);
+        verify(occurrenceRepository, never()).save(any(RecurringOccurrence.class));
     }
 
     @Test
@@ -107,7 +180,7 @@ class RecurringTransactionServiceTest {
         User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
         RecurringTransaction recurrence = accountRecurrence();
         RecurringOccurrence materialized = new RecurringOccurrence(1, 99, LocalDate.of(2026, 6, 5),
-                RecurringOccurrenceStatus.MATERIALIZED, 20, null, 1);
+                RecurringOccurrenceStatus.MATERIALIZED, BigDecimal.valueOf(500), 20, null, 1);
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         when(recurrenceRepository.findByIdAndUserId(99, 1)).thenReturn(Optional.of(recurrence));
         when(occurrenceRepository.findByRecurrenceIdAndOccurrenceDate(99, LocalDate.of(2026, 6, 5)))
@@ -124,6 +197,7 @@ class RecurringTransactionServiceTest {
         assertEquals(RecurringOccurrenceStatus.PENDING, captor.getValue().getStatus());
         assertNull(captor.getValue().getTransactionId());
         assertNull(captor.getValue().getExpenseId());
+        assertNull(captor.getValue().getAmount());
     }
 
     @Test
@@ -131,7 +205,7 @@ class RecurringTransactionServiceTest {
         User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
         RecurringTransaction recurrence = cardRecurrence();
         RecurringOccurrence materialized = new RecurringOccurrence(1, 99, LocalDate.of(2026, 6, 5),
-                RecurringOccurrenceStatus.MATERIALIZED, null, 30, 1);
+                RecurringOccurrenceStatus.MATERIALIZED, BigDecimal.valueOf(120), null, 30, 1);
         when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
         when(recurrenceRepository.findByIdAndUserId(99, 1)).thenReturn(Optional.of(recurrence));
         when(occurrenceRepository.findByRecurrenceIdAndOccurrenceDate(99, LocalDate.of(2026, 6, 5)))
@@ -148,6 +222,7 @@ class RecurringTransactionServiceTest {
         assertEquals(RecurringOccurrenceStatus.PENDING, captor.getValue().getStatus());
         assertNull(captor.getValue().getTransactionId());
         assertNull(captor.getValue().getExpenseId());
+        assertNull(captor.getValue().getAmount());
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.example.prospera.Entities;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -14,6 +15,7 @@ public class RecurringOccurrence {
     private LocalDate occurrenceDate;
     @Enumerated(EnumType.STRING)
     private RecurringOccurrenceStatus status;
+    private BigDecimal amount;
     private Integer transactionId;
     private Integer expenseId;
     private Integer userId;
@@ -24,10 +26,17 @@ public class RecurringOccurrence {
     public RecurringOccurrence(Integer id, Integer recurrenceId, LocalDate occurrenceDate,
                                RecurringOccurrenceStatus status, Integer transactionId, Integer expenseId,
                                Integer userId) {
+        this(id, recurrenceId, occurrenceDate, status, null, transactionId, expenseId, userId);
+    }
+
+    public RecurringOccurrence(Integer id, Integer recurrenceId, LocalDate occurrenceDate,
+                               RecurringOccurrenceStatus status, BigDecimal amount, Integer transactionId,
+                               Integer expenseId, Integer userId) {
         this.id = id;
         this.recurrenceId = recurrenceId;
         this.occurrenceDate = occurrenceDate;
         this.status = status;
+        this.amount = amount;
         this.transactionId = transactionId;
         this.expenseId = expenseId;
         this.userId = userId;
@@ -63,6 +72,14 @@ public class RecurringOccurrence {
 
     public void setStatus(RecurringOccurrenceStatus status) {
         this.status = status;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public Integer getTransactionId() {

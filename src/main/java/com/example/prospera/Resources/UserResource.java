@@ -26,14 +26,14 @@ public class UserResource {
 
     @GetMapping(value="/{id}")
     public ResponseEntity<UserRecord> findById(@PathVariable Integer id) {
-        User obj = service.findById(id);
+        User obj = service.findAuthenticatedUserById(id);
         return ResponseEntity.ok().body(new UserRecord(obj));
     }
 
 
     @DeleteMapping(value="/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        service.delete(id);
+        service.deleteAuthenticatedUser(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -41,7 +41,7 @@ public class UserResource {
     public ResponseEntity<User> update(@RequestBody UserRecord objDTO, @PathVariable Integer id) {
         User obj = service.fromDTO(objDTO);
         obj.setId(id);
-        obj = service.update(obj);
+        obj = service.updateAuthenticatedUser(obj);
         return ResponseEntity.noContent().build();
     }
 }

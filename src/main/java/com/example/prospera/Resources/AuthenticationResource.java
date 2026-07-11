@@ -8,6 +8,7 @@ import com.example.prospera.Entities.UserRole;
 import com.example.prospera.Infra.Security.TokenService;
 import com.example.prospera.Services.UserService;
 import com.example.prospera.repositories.UserRepository;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("auth")
+@SecurityRequirements
 public class AuthenticationResource {
 
     @Autowired

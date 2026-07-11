@@ -8,6 +8,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 public class AuthenticatedUserService {
     private final UserRepository userRepository;
@@ -34,5 +36,13 @@ public class AuthenticatedUserService {
         }
 
         throw new AccessDeniedException("Authenticated user could not be resolved");
+    }
+
+    public User requireAuthenticatedUser(Integer requestedUserId) {
+        User authenticatedUser = getAuthenticatedUser();
+        if (!Objects.equals(authenticatedUser.getId(), requestedUserId)) {
+            throw new AccessDeniedException("You can only access your own data");
+        }
+        return authenticatedUser;
     }
 }

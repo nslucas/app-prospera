@@ -4,7 +4,6 @@ import com.example.prospera.DTO.UserRecord;
 import com.example.prospera.Entities.User;
 import com.example.prospera.Exceptions.ObjectNotFoundException;
 import com.example.prospera.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -17,11 +16,12 @@ public class UserService {
     private static final int CONNECTION_CODE_LENGTH = 8;
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    @Autowired
     private final UserRepository repository;
+    private final AuthenticatedUserService authenticatedUserService;
 
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, AuthenticatedUserService authenticatedUserService) {
         this.repository = repository;
+        this.authenticatedUserService = authenticatedUserService;
     }
 
     public List<User> findAll() {
@@ -33,15 +33,29 @@ public class UserService {
         return optionalUser.orElseThrow(() -> new ObjectNotFoundException("Object not found!"));
     }
 
+    public User findAuthenticatedUserById(Integer id) {
+        return authenticatedUserService.requireAuthenticatedUser(id);
+    }
+
     public void delete(Integer id){
         findById(id);
         repository.deleteById(id);
+    }
+
+    public void deleteAuthenticatedUser(Integer id) {
+        User authenticatedUser = authenticatedUserService.requireAuthenticatedUser(id);
+        repository.deleteById(authenticatedUser.getId());
     }
 
     public User update(User obj){
         User newObj = repository.getReferenceById(obj.getId());
         updateData(newObj, obj);
         return repository.save(newObj);
+    }
+
+    public User updateAuthenticatedUser(User obj) {
+        authenticatedUserService.requireAuthenticatedUser(obj.getId());
+        return update(obj);
     }
 
     private void updateData(User newObj, User obj) {

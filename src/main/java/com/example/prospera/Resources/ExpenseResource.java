@@ -1,7 +1,6 @@
 package com.example.prospera.Resources;
 
 import com.example.prospera.DTO.ExpenseRecord;
-import com.example.prospera.Entities.Expense;
 import com.example.prospera.Entities.MonthlyExpensesResponse;
 import com.example.prospera.Services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,16 +41,13 @@ public class ExpenseResource {
 
     @GetMapping(value="/{id}/total-expenses")
     public ResponseEntity<BigDecimal> getTotalExpenses(@PathVariable Integer id){
-        BigDecimal retrieveTotalExpenses = service.getTotalExpensesByUserId(id);
+        BigDecimal retrieveTotalExpenses = service.getAuthenticatedUserTotalExpenses(id);
         return ResponseEntity.ok().body(retrieveTotalExpenses);
     }
 
     @GetMapping(value="/{id}/total-expenses/current-month")
     public ResponseEntity<MonthlyExpensesResponse> getTotalExpensesInCurrentMonth(@PathVariable Integer id){
-        List<Expense> expenses = service.getExpensesByUserIdInCurrentMonth(id);
-        BigDecimal totalAmount = service.getTotalExpensesByUserIdInCurrentMonth(id);
-        MonthlyExpensesResponse response = new MonthlyExpensesResponse(expenses, totalAmount);
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(service.getAuthenticatedUserExpensesInCurrentMonth(id));
     }
     @GetMapping(value="/{id}/total-expenses/any-month")
     public ResponseEntity<MonthlyExpensesResponse> getTotalExpensesInAnyMonth(@PathVariable Integer id, @RequestParam Integer month, @RequestParam Integer year){
@@ -62,10 +58,7 @@ public class ExpenseResource {
             throw new IllegalArgumentException("Year must be a valid year.");
         }
 
-        List<Expense> expenses = service.getExpensesByUserIdInAnyMonth(id, month, year);
-        BigDecimal totalAmount = service.getTotalExpensesByUserIdInAnyMonth(id, month, year);
-        MonthlyExpensesResponse response = new MonthlyExpensesResponse(expenses, totalAmount);
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(service.getAuthenticatedUserExpensesInAnyMonth(id, month, year));
     }
 
     @PutMapping(value="/{id}")

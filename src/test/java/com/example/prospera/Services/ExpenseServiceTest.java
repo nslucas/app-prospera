@@ -10,14 +10,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ExpenseServiceTest {
@@ -58,5 +59,17 @@ class ExpenseServiceTest {
         assertEquals(10, expense.getId());
         verify(installmentService).generateInstallments(expense, null);
         verify(expenseShareService).createForExpense(maria, expense, share);
+    }
+
+    @Test
+    void totalExpensesRejectsAnotherUsersIdBeforeQueryingFinancialData() {
+        when(authenticatedUserService.requireAuthenticatedUser(2))
+                .thenThrow(new AccessDeniedException("You can only access your own data"));
+        ExpenseService service = new ExpenseService(expenseRepository, userService, installmentService,
+                installmentRepository, authenticatedUserService, cardService, categoryService, expenseShareService);
+
+        assertThrows(AccessDeniedException.class, () -> service.getAuthenticatedUserTotalExpenses(2));
+
+        verifyNoInteractions(expenseRepository, installmentRepository);
     }
 }

@@ -38,6 +38,10 @@ git clone https://github.com/nslucas/prospera.git
 1. Make sure that MySQL service is running, if it is not, start the service in Task Explorer -> Services -> MySQL80
 2. The API will be accessible at http://localhost:8080
 
+Interactive API documentation is available at http://localhost:8080/swagger-ui.html. The raw OpenAPI JSON is available at http://localhost:8080/v3/api-docs.
+
+To test protected endpoints in Swagger UI, call `POST /auth/login`, copy the returned JWT, select **Authorize**, and enter the token. Swagger UI adds the `Bearer` prefix automatically.
+
 ## Running with Docker Compose
 
 The application can also run with Docker Compose. The API and MySQL database are started in separate containers.

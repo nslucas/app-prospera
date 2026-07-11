@@ -1,0 +1,1095 @@
+{
+  "info": {
+    "_postman_id": "5ad2ab90-251c-46f5-8fe0-c842cf48b371",
+    "name": "Prospera API",
+    "description": "Generated from Spring controller mappings in src/main/java/com/example/prospera/Resources. Import into Postman directly, or into Bruno using its Postman collection import. Login stores response.token into the collection token variable.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "john@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "secret123",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "accountId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "targetAccountId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "budgetId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "cardId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "expenseId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "transactionId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "connectionId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "targetCode",
+      "value": "ABC123",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "recurrenceId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "shareId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "counterpartyUserId",
+      "value": "2",
+      "type": "string"
+    },
+    {
+      "key": "month",
+      "value": "7",
+      "type": "string"
+    },
+    {
+      "key": "year",
+      "value": "2026",
+      "type": "string"
+    },
+    {
+      "key": "fromMonth",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "fromYear",
+      "value": "2026",
+      "type": "string"
+    },
+    {
+      "key": "toMonth",
+      "value": "12",
+      "type": "string"
+    },
+    {
+      "key": "toYear",
+      "value": "2026",
+      "type": "string"
+    },
+    {
+      "key": "fromDate",
+      "value": "2026-07-01",
+      "type": "string"
+    },
+    {
+      "key": "toDate",
+      "value": "2026-07-31",
+      "type": "string"
+    },
+    {
+      "key": "transactionType",
+      "value": "EXPENSE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.token) pm.collectionVariables.set('token', data.token);",
+                  "if (data.userId) pm.collectionVariables.set('userId', String(data.userId));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"{{email}}\",\"password\":\"{{password}}\"}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John\",\"lastName\":\"Doe\",\"monthLimit\":3000.00,\"email\":\"{{email}}\",\"password\":\"{{password}}\",\"role\":\"USER\"}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "List users (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users"
+          }
+        },
+        {
+          "name": "Get user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Update user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John\",\"lastName\":\"Doe\",\"monthLimit\":3000.00,\"email\":\"{{email}}\"}"
+            },
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Delete user",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/users/{{userId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "List accounts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/accounts"
+          }
+        },
+        {
+          "name": "Get account",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/accounts/{{accountId}}"
+          }
+        },
+        {
+          "name": "Create account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Checking\",\"type\":\"CHECKING\",\"balance\":1000.00,\"currency\":\"BRL\",\"active\":true}"
+            },
+            "url": "{{baseUrl}}/accounts"
+          }
+        },
+        {
+          "name": "Update account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Checking\",\"type\":\"CHECKING\",\"balance\":1200.00,\"currency\":\"BRL\",\"active\":true}"
+            },
+            "url": "{{baseUrl}}/accounts/{{accountId}}"
+          }
+        },
+        {
+          "name": "Delete account",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/accounts/{{accountId}}"
+          }
+        },
+        {
+          "name": "Transfer between accounts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"targetAccountId\":2,\"amount\":150.00,\"occurredAt\":\"2026-07-11T09:00:00\",\"description\":\"Transfer to savings\"}"
+            },
+            "url": "{{baseUrl}}/accounts/{{accountId}}/transfers"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alerts",
+      "item": [
+        {
+          "name": "List alerts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/alerts?month={{month}}&year={{year}}&from={{fromDate}}&to={{toDate}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "List budgets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/budgets?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Get budget",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/budgets/{{budgetId}}"
+          }
+        },
+        {
+          "name": "Create budget",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"categoryId\":1,\"month\":7,\"year\":2026,\"amount\":1200.00,\"active\":true}"
+            },
+            "url": "{{baseUrl}}/budgets"
+          }
+        },
+        {
+          "name": "Update budget",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"categoryId\":1,\"month\":7,\"year\":2026,\"amount\":1500.00,\"active\":true}"
+            },
+            "url": "{{baseUrl}}/budgets/{{budgetId}}"
+          }
+        },
+        {
+          "name": "Delete budget",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/budgets/{{budgetId}}"
+          }
+        },
+        {
+          "name": "Budget progress",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/budgets/progress?month={{month}}&year={{year}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cards",
+      "item": [
+        {
+          "name": "List cards",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cards"
+          }
+        },
+        {
+          "name": "Get card",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cards/{{cardId}}"
+          }
+        },
+        {
+          "name": "Create card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"bankName\":\"Nubank\",\"name\":\"Purple Card\",\"network\":\"Mastercard\",\"lastFourDigits\":\"1234\",\"creditLimit\":5000.00,\"closingDay\":20,\"dueDay\":27,\"active\":true}"
+            },
+            "url": "{{baseUrl}}/cards"
+          }
+        },
+        {
+          "name": "Update card",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"bankName\":\"Nubank\",\"name\":\"Purple Card\",\"network\":\"Mastercard\",\"lastFourDigits\":\"1234\",\"creditLimit\":6500.00,\"closingDay\":20,\"dueDay\":27,\"active\":true}"
+            },
+            "url": "{{baseUrl}}/cards/{{cardId}}"
+          }
+        },
+        {
+          "name": "Delete card",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/cards/{{cardId}}"
+          }
+        },
+        {
+          "name": "Card statement",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cards/{{cardId}}/statements?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Current card statement",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cards/{{cardId}}/statements/current"
+          }
+        },
+        {
+          "name": "Create card payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"cardId\":1,\"accountId\":1,\"month\":7,\"year\":2026,\"amount\":350.00,\"paymentDate\":\"2026-07-10\",\"description\":\"Card bill payment\",\"transactionId\":null}"
+            },
+            "url": "{{baseUrl}}/cards/{{cardId}}/payments"
+          }
+        },
+        {
+          "name": "List card payments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/cards/{{cardId}}/payments?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Update card payment",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"cardId\":1,\"accountId\":1,\"month\":7,\"year\":2026,\"amount\":400.00,\"paymentDate\":\"2026-07-10\",\"description\":\"Updated card bill payment\",\"transactionId\":null}"
+            },
+            "url": "{{baseUrl}}/cards/{{cardId}}/payments/{{paymentId}}"
+          }
+        },
+        {
+          "name": "Delete card payment",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/cards/{{cardId}}/payments/{{paymentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/categories"
+          }
+        },
+        {
+          "name": "Get category",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/categories/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Create category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Groceries\",\"type\":\"EXPENSE\",\"active\":true}"
+            },
+            "url": "{{baseUrl}}/categories"
+          }
+        },
+        {
+          "name": "Update category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Groceries\",\"type\":\"EXPENSE\",\"active\":true}"
+            },
+            "url": "{{baseUrl}}/categories/{{categoryId}}"
+          }
+        },
+        {
+          "name": "Delete category",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/categories/{{categoryId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Connections",
+      "item": [
+        {
+          "name": "Get connection code",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/connections/code"
+          }
+        },
+        {
+          "name": "Create connection request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"targetCode\":\"{{targetCode}}\"}"
+            },
+            "url": "{{baseUrl}}/connections/requests"
+          }
+        },
+        {
+          "name": "List pending connection requests",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/connections/requests/pending"
+          }
+        },
+        {
+          "name": "Accept connection request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/connections/requests/{{connectionId}}/accept"
+          }
+        },
+        {
+          "name": "Decline connection request",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/connections/requests/{{connectionId}}/decline"
+          }
+        },
+        {
+          "name": "List accepted connections",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/connections"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "List expenses",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses?month={{month}}&year={{year}}&cardId={{cardId}}"
+          }
+        },
+        {
+          "name": "Get expense",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses/{{expenseId}}"
+          }
+        },
+        {
+          "name": "Total expenses by user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses/{{userId}}/total-expenses"
+          }
+        },
+        {
+          "name": "Current month total expenses by user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses/{{userId}}/total-expenses/current-month"
+          }
+        },
+        {
+          "name": "Any month total expenses by user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/expenses/{{userId}}/total-expenses/any-month?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Create expense",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Groceries\",\"amount\":180.50,\"installmentCount\":1,\"purchaseDate\":\"2026-07-11T10:30:00\",\"description\":\"Weekly groceries\",\"userId\":1,\"cardId\":1,\"categoryId\":1,\"share\":{\"participantUserId\":2,\"creatorAmount\":90.25,\"participantAmount\":90.25}}"
+            },
+            "url": "{{baseUrl}}/expenses"
+          }
+        },
+        {
+          "name": "Update expense",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Groceries\",\"amount\":200.00,\"installmentCount\":1,\"purchaseDate\":\"2026-07-11T10:30:00\",\"description\":\"Updated groceries\",\"userId\":1,\"cardId\":1,\"categoryId\":1,\"share\":null}"
+            },
+            "url": "{{baseUrl}}/expenses/{{expenseId}}"
+          }
+        },
+        {
+          "name": "Delete expense",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/expenses/{{expenseId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "item": [
+        {
+          "name": "Get preferences",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/me/preferences"
+          }
+        },
+        {
+          "name": "Update preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"defaultMovementKind\":\"EXPENSE\",\"defaultAccountId\":1,\"defaultTargetAccountId\":2,\"defaultCardId\":1,\"defaultExpenseCategoryId\":1,\"defaultIncomeCategoryId\":2,\"defaultInstallmentCount\":1,\"notifications\":{\"connectionRequests\":true,\"sharedExpenses\":true,\"financialDigest\":true}}"
+            },
+            "url": "{{baseUrl}}/me/preferences"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List notifications",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications?limit=20&unreadOnly=false"
+          }
+        },
+        {
+          "name": "Unread notification count",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/notifications/unread-count"
+          }
+        },
+        {
+          "name": "Mark notification read",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/notifications/{{notificationId}}/read"
+          }
+        },
+        {
+          "name": "Mark all notifications read",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/notifications/read-all"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Push",
+      "item": [
+        {
+          "name": "Get VAPID public key",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/push/vapid-public-key"
+          }
+        },
+        {
+          "name": "Upsert push subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"endpoint\":\"https://example.com/push/subscription\",\"expirationTime\":null,\"keys\":{\"p256dh\":\"p256dh-key\",\"auth\":\"auth-secret\"}}"
+            },
+            "url": "{{baseUrl}}/push/subscriptions"
+          }
+        },
+        {
+          "name": "Unsubscribe push subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"endpoint\":\"https://example.com/push/subscription\"}"
+            },
+            "url": "{{baseUrl}}/push/subscriptions/unsubscribe"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recurrences",
+      "item": [
+        {
+          "name": "List recurrences",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/recurrences"
+          }
+        },
+        {
+          "name": "Get recurrence",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/recurrences/{{recurrenceId}}"
+          }
+        },
+        {
+          "name": "Create recurrence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Rent\",\"description\":\"Monthly rent\",\"targetType\":\"ACCOUNT_TRANSACTION\",\"transactionType\":\"EXPENSE\",\"amount\":1500.00,\"frequency\":\"MONTHLY\",\"startDate\":\"2026-07-01\",\"endDate\":null,\"dayOfMonth\":5,\"monthOfYear\":null,\"accountId\":1,\"cardId\":null,\"categoryId\":1,\"installmentCount\":1,\"classification\":\"FIXED\",\"active\":true}"
+            },
+            "url": "{{baseUrl}}/recurrences"
+          }
+        },
+        {
+          "name": "Update recurrence",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"name\":\"Rent\",\"description\":\"Updated monthly rent\",\"targetType\":\"ACCOUNT_TRANSACTION\",\"transactionType\":\"EXPENSE\",\"amount\":1600.00,\"frequency\":\"MONTHLY\",\"startDate\":\"2026-07-01\",\"endDate\":null,\"dayOfMonth\":5,\"monthOfYear\":null,\"accountId\":1,\"cardId\":null,\"categoryId\":1,\"installmentCount\":1,\"classification\":\"FIXED\",\"active\":true}"
+            },
+            "url": "{{baseUrl}}/recurrences/{{recurrenceId}}"
+          }
+        },
+        {
+          "name": "Delete recurrence",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/recurrences/{{recurrenceId}}"
+          }
+        },
+        {
+          "name": "Preview occurrences",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/recurrences/occurrences?from={{fromDate}}&to={{toDate}}"
+          }
+        },
+        {
+          "name": "Materialize occurrence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"occurrenceDate\":\"2026-07-05\",\"amount\":1500.00}"
+            },
+            "url": "{{baseUrl}}/recurrences/{{recurrenceId}}/occurrences"
+          }
+        },
+        {
+          "name": "Skip occurrence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"occurrenceDate\":\"2026-07-05\",\"amount\":null}"
+            },
+            "url": "{{baseUrl}}/recurrences/{{recurrenceId}}/occurrences/skip"
+          }
+        },
+        {
+          "name": "Revert occurrence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"occurrenceDate\":\"2026-07-05\",\"amount\":null}"
+            },
+            "url": "{{baseUrl}}/recurrences/{{recurrenceId}}/occurrences/revert"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settlements",
+      "item": [
+        {
+          "name": "Settlement summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/settlements"
+          }
+        },
+        {
+          "name": "Settlement items",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/settlements/items?counterpartyUserId={{counterpartyUserId}}"
+          }
+        },
+        {
+          "name": "Settle item",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/settlements/items/{{shareId}}/settle"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary",
+      "item": [
+        {
+          "name": "Monthly summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/monthly?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Category summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/categories?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Monthly trends",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/trends?fromMonth={{fromMonth}}&fromYear={{fromYear}}&toMonth={{toMonth}}&toYear={{toYear}}"
+          }
+        },
+        {
+          "name": "Upcoming summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/upcoming?from={{fromDate}}&to={{toDate}}"
+          }
+        },
+        {
+          "name": "Forecast",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/forecast?months=6"
+          }
+        },
+        {
+          "name": "Yearly summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/yearly?year={{year}}"
+          }
+        },
+        {
+          "name": "Cards summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/cards?month={{month}}&year={{year}}"
+          }
+        },
+        {
+          "name": "Fixed vs variable summary",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/summary/fixed-variable?month={{month}}&year={{year}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transactions?month={{month}}&year={{year}}&accountId={{accountId}}&type={{transactionType}}"
+          }
+        },
+        {
+          "name": "Get transaction",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/transactions/{{transactionId}}"
+          }
+        },
+        {
+          "name": "Create transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"id\":null,\"type\":\"EXPENSE\",\"amount\":45.90,\"occurredAt\":\"2026-07-11T12:00:00\",\"description\":\"Lunch\",\"accountId\":1,\"relatedTransactionId\":null,\"categoryId\":1}"
+            },
+            "url": "{{baseUrl}}/transactions"
+          }
+        },
+        {
+          "name": "Delete transaction",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/transactions/{{transactionId}}"
+          }
+        }
+      ]
+    }
+  ]
+}

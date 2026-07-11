@@ -4,6 +4,7 @@ import com.example.prospera.DTO.ExpenseRecord;
 import com.example.prospera.Entities.Card;
 import com.example.prospera.Entities.CategoryType;
 import com.example.prospera.Entities.Expense;
+import com.example.prospera.Entities.MonthlyExpensesResponse;
 import com.example.prospera.Entities.User;
 import com.example.prospera.Exceptions.ObjectNotFoundException;
 import com.example.prospera.repositories.ExpenseInstallmentRepository;
@@ -161,30 +162,31 @@ public class ExpenseService {
         expenseRepository.deleteById(expense.getId());
     }
 
-    public BigDecimal getTotalExpensesByUserId(Integer userId) {
-        return zeroIfNull(expenseRepository.sumAmountByUserId(userId));
+    public BigDecimal getAuthenticatedUserTotalExpenses(Integer requestedUserId) {
+        User user = authenticatedUserService.requireAuthenticatedUser(requestedUserId);
+        return zeroIfNull(expenseRepository.sumAmountByUserId(user.getId()));
     }
 
-    public BigDecimal getTotalExpensesByUserIdInCurrentMonth(Integer userId) {
+    public MonthlyExpensesResponse getAuthenticatedUserExpensesInCurrentMonth(Integer requestedUserId) {
+        User user = authenticatedUserService.requireAuthenticatedUser(requestedUserId);
         YearMonth currentMonth = YearMonth.now();
-        return zeroIfNull(installmentRepository.sumByUserIdAndDueMonth(userId, currentMonth.getMonthValue(), currentMonth.getYear()));
+        List<Expense> expenses = installmentRepository.findExpensesByUserIdAndDueMonth(
+                user.getId(), currentMonth.getMonthValue(), currentMonth.getYear());
+        BigDecimal total = zeroIfNull(installmentRepository.sumByUserIdAndDueMonth(
+                user.getId(), currentMonth.getMonthValue(), currentMonth.getYear()));
+        return new MonthlyExpensesResponse(expenses, total);
     }
 
-    public BigDecimal getTotalExpensesByUserIdInAnyMonth(Integer userId, Integer month, Integer year) {
-        return zeroIfNull(installmentRepository.sumByUserIdAndDueMonth(userId, month, year));
-    }
-
-    public List<Expense> getExpensesByUserIdInCurrentMonth(Integer userId) {
-        YearMonth currentMonth = YearMonth.now();
-        return installmentRepository.findExpensesByUserIdAndDueMonth(userId, currentMonth.getMonthValue(), currentMonth.getYear());
-    }
-
-    public List<Expense> getExpensesByUserIdInAnyMonth(Integer userId, Integer month, Integer year) {
-        List<Expense> list = installmentRepository.findExpensesByUserIdAndDueMonth(userId, month, year);
-        if (list.isEmpty()) {
+    public MonthlyExpensesResponse getAuthenticatedUserExpensesInAnyMonth(Integer requestedUserId,
+                                                                           Integer month,
+                                                                           Integer year) {
+        User user = authenticatedUserService.requireAuthenticatedUser(requestedUserId);
+        List<Expense> expenses = installmentRepository.findExpensesByUserIdAndDueMonth(user.getId(), month, year);
+        if (expenses.isEmpty()) {
             throw new ObjectNotFoundException("There are no expenses for this user");
         }
-        return list;
+        BigDecimal total = zeroIfNull(installmentRepository.sumByUserIdAndDueMonth(user.getId(), month, year));
+        return new MonthlyExpensesResponse(expenses, total);
     }
 
     public Expense fromDTO(ExpenseRecord objDTO) {

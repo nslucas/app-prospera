@@ -1,6 +1,7 @@
 package com.example.prospera.Resources;
 
 import com.example.prospera.DTO.ExpenseRecord;
+import com.example.prospera.Entities.Expense;
 import com.example.prospera.Entities.MonthlyExpensesResponse;
 import com.example.prospera.Services.ExpenseService;
 import org.springframework.beans.factory.annotation.Autowired;

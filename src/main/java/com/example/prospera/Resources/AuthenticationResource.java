@@ -5,17 +5,18 @@ import com.example.prospera.DTO.LoginResponseDTO;
 import com.example.prospera.DTO.RegisterDTO;
 import com.example.prospera.Entities.User;
 import com.example.prospera.Entities.UserRole;
+import com.example.prospera.Infra.Security.AuthRateLimitService;
 import com.example.prospera.Infra.Security.TokenService;
 import com.example.prospera.Services.UserService;
 import com.example.prospera.repositories.UserRepository;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,46 +27,62 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("auth")
 @SecurityRequirements
 public class AuthenticationResource {
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository repository;
+    private final TokenService tokenService;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthRateLimitService rateLimitService;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    UserRepository _repository;
-    @Autowired
-    private TokenService tokenService;
-    @Autowired
-    private UserService userService;
+    public AuthenticationResource(AuthenticationManager authenticationManager,
+                                  UserRepository repository,
+                                  TokenService tokenService,
+                                  UserService userService,
+                                  PasswordEncoder passwordEncoder,
+                                  AuthRateLimitService rateLimitService) {
+        this.authenticationManager = authenticationManager;
+        this.repository = repository;
+        this.tokenService = tokenService;
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+        this.rateLimitService = rateLimitService;
+    }
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody @Validated AuthenticationDTO data){
+    public ResponseEntity<?> login(@RequestBody @Validated AuthenticationDTO data, HttpServletRequest request) {
+        String email = AuthRateLimitService.normalizeEmail(data.email());
+        AuthRateLimitService.LoginAttempt attempt = rateLimitService.acquireLogin(request.getRemoteAddr(), email);
         try {
-            var usernamePassword = new UsernamePasswordAuthenticationToken(data.email(), data.password());
-            var auth = this.authenticationManager.authenticate(usernamePassword);
+            var usernamePassword = new UsernamePasswordAuthenticationToken(email, data.password());
+            var auth = authenticationManager.authenticate(usernamePassword);
 
             User user = (User) auth.getPrincipal();
             var token = tokenService.generateToken(user);
-            return ResponseEntity.ok(new LoginResponseDTO(token, user.getId(), user.getEmail(), user.getName(), user.getLastName()));
-        } catch (BadCredentialsException e) {
+            rateLimitService.loginSucceeded(attempt);
+            return ResponseEntity.ok(new LoginResponseDTO(token, user.getId(), user.getEmail(), user.getName(),
+                    user.getLastName()));
+        } catch (AuthenticationException exception) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-        } catch (Exception e) {
+        } catch (Exception exception) {
+            rateLimitService.loginSystemFailed(attempt);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred");
         }
     }
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody @Validated RegisterDTO data){
-        if(this._repository.findByEmail(data.email()) != null){
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<Void> register(@RequestBody @Validated RegisterDTO data, HttpServletRequest request) {
+        String email = AuthRateLimitService.normalizeEmail(data.email());
+        rateLimitService.acquireRegistration(request.getRemoteAddr(), email);
+
+        String encryptedPassword = passwordEncoder.encode(data.password());
+        if (repository.findByEmail(email) != null) {
+            return ResponseEntity.ok().build();
         }
-        String encryptedPassword = BCrypt.hashpw(data.password(), BCrypt.gensalt());
-        UserRole role = data.role() == null ? UserRole.USER : data.role();
-        User newUser = new User(data.name(), data.lastName(), data.monthLimit(), data.email(), encryptedPassword, role);
+
+        User newUser = new User(data.name(), data.lastName(), data.monthLimit(), email, encryptedPassword,
+                UserRole.USER);
         newUser.setConnectionCode(userService.generateUniqueConnectionCode());
-
-        this._repository.save(newUser);
-
+        repository.save(newUser);
         return ResponseEntity.ok().build();
     }
-
 }

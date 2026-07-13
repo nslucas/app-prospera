@@ -28,28 +28,28 @@ Com isso, alguns campos antigos continuam no banco ou nos DTOs, mas já não rep
 
 ### `user.role`
 
-Status: usado, mas com problema de contrato.
+Status: usado; o problema de cadastro público foi corrigido.
 
 Onde aparece:
 
 - `User.role` é um `UserRole`.
 - `User.getAuthorities()` devolve `ROLE_ADMIN` e `ROLE_USER` quando o usuário é admin.
 - `SecurityConfiguration` exige `hasRole("ADMIN")` para `GET /users`.
-- `RegisterDTO` aceita `role`.
-- `AuthenticationResource.register()` usa `data.role()` quando enviado, ou `USER` quando nulo.
+- `RegisterDTO` não aceita mais `role`.
+- `AuthenticationResource.register()` sempre cria usuários com `UserRole.USER`.
 
 Conclusão: a coluna não é inútil hoje. Ela controla ao menos uma autorização real: listar usuários.
 
-Problema: o cadastro público aceita `role`. Como `POST /auth/register` é público, o contrato atual permite que um payload tente criar usuário `ADMIN`. Mesmo que o frontend não envie isso, a API não deveria confiar nesse campo.
+Problema corrigido: o cadastro público não aceita nem confia em `role`; campos legados desconhecidos são ignorados.
 
 Tarefas recomendadas:
 
-- [ ] Remover `role` de `RegisterDTO`.
-- [ ] Fazer todo cadastro público criar usuário com `UserRole.USER`.
+- [x] Remover `role` de `RegisterDTO`.
+- [x] Fazer todo cadastro público criar usuário com `UserRole.USER`.
 - [ ] Criar um fluxo separado e protegido para promover usuário a admin, se administração continuar existindo.
 - [ ] Decidir se `GET /users` é uma tela administrativa real. Se não for, remover o endpoint ou restringir melhor o uso.
-- [ ] Atualizar `docs/frontend-api-handoff.md`, porque o exemplo de registro ainda mostra `role`.
-- [ ] Adicionar teste garantindo que `POST /auth/register` nunca cria admin.
+- [x] Atualizar `docs/frontend-api-handoff.md`, removendo `role` do exemplo.
+- [x] Adicionar teste garantindo que `POST /auth/register` nunca cria admin.
 
 Decisão sugerida: manter `user.role`, mas não aceitar `role` em cadastro público.
 
@@ -170,12 +170,12 @@ Tarefas recomendadas:
 
 ### `RegisterDTO.role` e `RegisterDTO.monthLimit`
 
-Status: acoplam cadastro público a campos que não deveriam ser públicos.
+Status: `role` removido do contrato público; a decisão sobre `monthLimit` permanece pendente.
 
 Tarefas recomendadas:
 
 - [ ] Criar request de cadastro só com `name`, `lastName`, `email` e `password`.
-- [ ] Definir `role=USER` no servidor.
+- [x] Definir `role=USER` no servidor.
 - [ ] Remover `monthLimit` do cadastro, se a decisão for remover limite mensal global.
 
 ## Endpoints legados de despesa
@@ -209,9 +209,9 @@ Tarefas recomendadas:
 
 ## Pendências de documentação
 
-- [ ] Corrigir exemplo de `POST /auth/login` em `docs/frontend-api-handoff.md`: o DTO de resposta atual é `token`, `userId`, `email`, mas o exemplo mostra `id`.
-- [ ] Corrigir exemplo de `POST /auth/register`: o DTO atual usa `name`, não `firstName`.
-- [ ] Remover `role` do exemplo de cadastro se o backend for ajustado.
+- [x] Corrigir exemplo de `POST /auth/login` em `docs/frontend-api-handoff.md`.
+- [x] Corrigir exemplo de `POST /auth/register`: o DTO atual usa `name`, não `firstName`.
+- [x] Remover `role` do exemplo de cadastro.
 - [ ] Remover `monthLimit` dos contratos se a decisão for descartar o limite mensal global.
 - [ ] Atualizar README para refletir o produto atual: contas, cartões, faturas, orçamentos por categoria, recorrências e compartilhamento.
 

@@ -4,6 +4,7 @@ import com.example.prospera.DTO.CategoryRecord;
 import com.example.prospera.Entities.Category;
 import com.example.prospera.Entities.CategoryType;
 import com.example.prospera.Entities.User;
+import com.example.prospera.Exceptions.ObjectNotFoundException;
 import com.example.prospera.repositories.CategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,5 +61,19 @@ class CategoryServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.create(record));
         verify(categoryRepository, never()).save(any(Category.class));
+    }
+
+    @Test
+    void findByIdCannotReadAnotherUsersCategory() {
+        User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(categoryRepository.findByIdAndUserId(10, 1)).thenReturn(Optional.empty());
+        CategoryService service = new CategoryService(categoryRepository, authenticatedUserService,
+                userPreferenceService);
+
+        assertThrows(ObjectNotFoundException.class, () -> service.findAuthenticatedUserCategory(10));
+
+        verify(categoryRepository).findByIdAndUserId(10, 1);
+        verify(categoryRepository, never()).findById(10);
     }
 }

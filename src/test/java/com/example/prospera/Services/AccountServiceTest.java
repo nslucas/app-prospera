@@ -2,6 +2,7 @@ package com.example.prospera.Services;
 
 import com.example.prospera.DTO.AccountRecord;
 import com.example.prospera.Entities.*;
+import com.example.prospera.Exceptions.ObjectNotFoundException;
 import com.example.prospera.repositories.AccountRepository;
 import com.example.prospera.repositories.TransactionRepository;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -46,5 +49,19 @@ class AccountServiceTest {
         assertEquals(TransactionType.ADJUSTMENT, transactionCaptor.getValue().getType());
         assertEquals(BigDecimal.valueOf(500), transactionCaptor.getValue().getAmount());
         assertEquals(10, transactionCaptor.getValue().getAccountId());
+    }
+
+    @Test
+    void findByIdCannotReadAnotherUsersAccount() {
+        User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(accountRepository.findByIdAndUserId(10, 1)).thenReturn(Optional.empty());
+        AccountService service = new AccountService(accountRepository, authenticatedUserService, transactionRepository,
+                userPreferenceService);
+
+        assertThrows(ObjectNotFoundException.class, () -> service.findAuthenticatedUserAccount(10));
+
+        verify(accountRepository).findByIdAndUserId(10, 1);
+        verify(accountRepository, never()).findById(10);
     }
 }

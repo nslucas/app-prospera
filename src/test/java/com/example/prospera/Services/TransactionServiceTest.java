@@ -2,6 +2,7 @@ package com.example.prospera.Services;
 
 import com.example.prospera.DTO.TransactionRecord;
 import com.example.prospera.Entities.*;
+import com.example.prospera.Exceptions.ObjectNotFoundException;
 import com.example.prospera.repositories.TransactionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,6 +60,20 @@ class TransactionServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.create(record));
         verifyNoInteractions(accountService);
         verifyNoInteractions(transactionRepository);
+    }
+
+    @Test
+    void findByIdCannotReadAnotherUsersTransaction() {
+        User user = new User(1, "Lucas", "Nunes", BigDecimal.valueOf(1000), "lucas@test.com");
+        when(authenticatedUserService.getAuthenticatedUser()).thenReturn(user);
+        when(transactionRepository.findByIdAndUserId(55, 1)).thenReturn(Optional.empty());
+        TransactionService service = new TransactionService(transactionRepository, authenticatedUserService,
+                accountService, categoryService);
+
+        assertThrows(ObjectNotFoundException.class, () -> service.findAuthenticatedUserTransaction(55));
+
+        verify(transactionRepository).findByIdAndUserId(55, 1);
+        verify(transactionRepository, never()).findById(55);
     }
 
     @Test

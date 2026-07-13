@@ -1,6 +1,7 @@
 package com.example.prospera.Exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,6 +11,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class ResourceExceptionHandler {
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<StandardError> rateLimitExceeded(RateLimitExceededException e,
+                                                            HttpServletRequest request) {
+        HttpStatus httpStatus = HttpStatus.TOO_MANY_REQUESTS;
+        StandardError err = new StandardError(System.currentTimeMillis(), httpStatus.value(),
+                "Too many requests", e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(httpStatus)
+                .header(HttpHeaders.RETRY_AFTER, String.valueOf(e.getRetryAfterSeconds()))
+                .body(err);
+    }
+
     @ExceptionHandler(ObjectNotFoundException.class)
 
     public ResponseEntity<StandardError> objectNotFound(ObjectNotFoundException e, HttpServletRequest request){

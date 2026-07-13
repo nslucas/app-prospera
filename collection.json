@@ -209,7 +209,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\"name\":\"John\",\"lastName\":\"Doe\",\"monthLimit\":3000.00,\"email\":\"{{email}}\",\"password\":\"{{password}}\",\"role\":\"USER\"}"
+              "raw": "{\"name\":\"John\",\"lastName\":\"Doe\",\"monthLimit\":3000.00,\"email\":\"{{email}}\",\"password\":\"{{password}}\"}"
             },
             "url": "{{baseUrl}}/auth/register"
           }

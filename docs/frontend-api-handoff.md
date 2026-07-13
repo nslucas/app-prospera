@@ -12,6 +12,7 @@ This document describes the current REST API surface for the finance-tracking fr
   - `LocalDate`: `YYYY-MM-DD`.
   - `LocalDateTime`: ISO datetime such as `2026-06-18T10:30:00`.
 - Soft deletes return `204 No Content` and generally set `active=false`.
+- Authentication throttling returns `429 Too Many Requests` with a `Retry-After` header.
 - Standard domain errors usually return `400`, `403`, or `404` with a body shaped like:
 
 ```json
@@ -56,8 +57,10 @@ Response:
 ```json
 {
   "token": "jwt-token",
-  "id": 1,
-  "email": "user@example.com"
+  "userId": 1,
+  "email": "user@example.com",
+  "name": "Lucas",
+  "lastName": "Nunes"
 }
 ```
 
@@ -65,6 +68,7 @@ Particularities:
 
 - Store the `token` and send it as `Authorization: Bearer <token>`.
 - Invalid credentials return `401` with a plain text body.
+- Login is limited independently by client IP and normalized email.
 
 ### `POST /auth/register`
 
@@ -72,15 +76,18 @@ Request:
 
 ```json
 {
-  "firstName": "Lucas",
+  "name": "Lucas",
   "lastName": "Nunes",
+  "monthLimit": 3000,
   "email": "user@example.com",
-  "password": "secret",
-  "role": "USER"
+  "password": "secret"
 }
 ```
 
 Response: `200 OK` with an empty body.
+
+Public registration always creates a `USER`. Re-registering an existing email returns the same empty
+`200 OK` response and does not modify the existing account.
 
 ## Accounts
 

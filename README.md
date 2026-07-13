@@ -62,6 +62,14 @@ Services exposed locally:
 
 By default, the API is bound to `127.0.0.1:8080`, so it is reachable from the VPS itself and from a local reverse proxy, but not directly exposed on the public network interface. MySQL is not published to the host; only the API container can reach it through the internal Docker hostname `db`.
 
+Authentication rate limits use the original client IP supplied by the local reverse proxy. The proxy must
+overwrite incoming `Forwarded` and `X-Forwarded-*` headers rather than appending values supplied by the
+public client. Keep the API bound to localhost when `FORWARD_HEADERS_STRATEGY=native` is enabled.
+
+The default authentication limits are 30 login attempts per IP every 15 minutes, 5 failed login attempts
+per email every 15 minutes, 5 registrations per IP per hour, and 3 registrations per email per day. These
+values and the in-memory cache size can be overridden with the `AUTH_*` variables in `.env.example`.
+
 The production domain `appprospera.com.br` is allowed by the default CORS configuration, including `www.appprospera.com.br` and `api.appprospera.com.br`. To override the allowed origins, set `CORS_ALLOWED_ORIGIN_PATTERNS` with a comma-separated list before starting Compose.
 
 JWT sessions use `JWT_EXPIRATION_HOURS`, defaulting to 720 hours. Set a lower value in `.env` if the deployment should require users to sign in more frequently.

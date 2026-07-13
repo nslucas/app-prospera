@@ -3,20 +3,19 @@ package com.example.prospera.Resources;
 import com.example.prospera.DTO.UserRecord;
 import com.example.prospera.Entities.User;
 import com.example.prospera.Services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/users")
 public class UserResource {
+    private final UserService service;
 
-    @Autowired
-    private UserService service;
+    public UserResource(UserService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<List<UserRecord>> findAll(){
@@ -38,10 +37,10 @@ public class UserResource {
     }
 
     @PutMapping(value="/{id}")
-    public ResponseEntity<User> update(@RequestBody UserRecord objDTO, @PathVariable Integer id) {
+    public ResponseEntity<UserRecord> update(@RequestBody UserRecord objDTO, @PathVariable Integer id) {
         User obj = service.fromDTO(objDTO);
         obj.setId(id);
         obj = service.updateAuthenticatedUser(obj);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new UserRecord(obj));
     }
 }

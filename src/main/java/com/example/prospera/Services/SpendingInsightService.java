@@ -71,11 +71,12 @@ public class SpendingInsightService {
 
     public Map<Integer, BigDecimal> getSpendingByCategory(Integer userId, Integer month, Integer year) {
         Map<Integer, BigDecimal> totals = new HashMap<>();
-        YearMonth filterMonth = YearMonth.of(year, month);
-        LocalDateTime fromDateTime = filterMonth.atDay(1).atStartOfDay();
-        LocalDateTime toDateTime = filterMonth.plusMonths(1).atDay(1).atStartOfDay();
-        LocalDate fromDate = filterMonth.atDay(1);
-        LocalDate toDate = filterMonth.plusMonths(1).atDay(1);
+        YearMonth reportMonth = YearMonth.of(year, month);
+        YearMonth statementMonth = reportMonth.plusMonths(1);
+        LocalDateTime fromDateTime = reportMonth.atDay(1).atStartOfDay();
+        LocalDateTime toDateTime = reportMonth.plusMonths(1).atDay(1).atStartOfDay();
+        LocalDate fromDate = statementMonth.atDay(1);
+        LocalDate toDate = statementMonth.plusMonths(1).atDay(1);
         mergeGroupedTotals(totals, transactionRepository.sumExpenseTransactionsByCategoryInDateRange(userId,
                 fromDateTime, toDateTime, TransactionType.EXPENSE));
         mergeGroupedTotals(totals, installmentRepository.sumCardStatementInstallmentsByCategoryInDueDateRange(userId,
